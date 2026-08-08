@@ -3,6 +3,7 @@ import { ChartSurface } from "./ChartSurface";
 import { XAxis } from "./XAxis";
 import { YAxis } from "./YAxis";
 import { useContainerSize } from "./useContainerSize";
+import { PriceSeries } from "./PriceSeries";
 import {
   PRICE_MARGINS,
   getInnerSize,
@@ -52,6 +53,7 @@ export function MarketChart({ points }: MarketChartProps) {
           <g transform={`translate(${margins.left}, ${margins.top})`}>
             <XAxis xScale={xScale} innerHeight={innerHeight} />
             <YAxis yScale={yScale} />
+            <PriceSeries points={points} xScale={xScale} yScale={yScale} />
           </g>
         </ChartSurface>
       </div>

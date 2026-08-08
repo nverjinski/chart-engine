@@ -80,3 +80,7 @@
 .axis text {
   font-family: var(--mono);
 }
+
+.price-series {
+  color: #1f2c03;
+}

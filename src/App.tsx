@@ -21,7 +21,7 @@ function App() {
       <MarketChart points={marketPoints} />
       <p className="chart-meta">
         {marketPoints.length} points · ${first?.price.toFixed(2)} → $
-        {last?.price.toFixed(2)} · domain data only (no scales yet)
+        {last?.price.toFixed(2)} · shared scales · price series
       </p>
     </div>
   );
