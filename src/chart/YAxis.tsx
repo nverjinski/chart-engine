@@ -1,0 +1,32 @@
+import type { ScaleLinear } from "d3";
+
+type YAxisProps = {
+  yScale: ScaleLinear<number, number>;
+};
+
+export function YAxis({ yScale }: YAxisProps) {
+  const ticks = yScale.ticks(6);
+
+  return (
+    <g className="axis axis-y">
+      <line y2={yScale.range()[1]} stroke="currentColor" />
+      {ticks.map((tick) => {
+        const y = yScale(tick) ?? 0;
+        return (
+          <g key={tick} transform={`translate(0, ${y})`}>
+            <line x2={6} stroke="currentColor" />
+            <text
+              x={-10}
+              dy="0.32em"
+              textAnchor="end"
+              fill="currentColor"
+              fontSize={11}
+            >
+              {tick.toFixed(2)}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
