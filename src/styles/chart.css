@@ -73,3 +73,10 @@
   font-size: 12px;
   font-family: var(--mono);
 }
+
+.axis {
+  color: var(--muted);
+}
+.axis text {
+  font-family: var(--mono);
+}

@@ -9,7 +9,11 @@ export function YAxis({ yScale }: YAxisProps) {
 
   return (
     <g className="axis axis-y">
-      <line y2={yScale.range()[1]} stroke="currentColor" />
+      <line
+        y1={yScale.range()[0]}
+        y2={yScale.range()[1]}
+        stroke="currentColor"
+      />
       {ticks.map((tick) => {
         const y = yScale(tick) ?? 0;
         return (
