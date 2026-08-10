@@ -12,8 +12,9 @@ import {
   PRICE_MARGINS,
   getInnerSize,
   createXScale,
-  createYScale,
+  createYScaleForDomain,
 } from "./scales";
+import { useChartZoom } from "./useChartZoom";
 import type { MarketPoint } from "../data/types";
 
 const PRICE_HEIGHT = 480;
@@ -41,18 +42,36 @@ export function MarketChart({ points }: MarketChartProps) {
       PRICE_HEIGHT,
       margins,
     );
-    const xScale = createXScale(points, innerWidth);
-    const yScale = createYScale(points, innerHeight);
+    const baseXScale = createXScale(points, innerWidth);
     return {
       margins,
       innerWidth,
       innerHeight,
-      xScale,
-      yScale,
+      baseXScale,
     };
   }, [points, width]);
 
-  const { margins, innerWidth, innerHeight, xScale, yScale } = layout;
+  const { zoomRef, xDomain } = useChartZoom({
+    baseXScale: layout.baseXScale,
+    innerWidth: layout.innerWidth,
+    innerHeight: layout.innerHeight,
+  });
+
+  const xScale = useMemo(() => {
+    const scale = layout.baseXScale.copy();
+    if (xDomain) scale.domain(xDomain);
+    return scale;
+  }, [layout.baseXScale, xDomain]);
+
+  const yScale = useMemo(() => {
+    const domain = (xDomain ?? layout.baseXScale.domain()) as [Date, Date];
+    const visible = points.filter(
+      (d) => d.timestamp >= domain[0] && d.timestamp <= domain[1],
+    );
+    return createYScaleForDomain(visible, domain, layout.innerHeight);
+  }, [points, xDomain, layout.baseXScale, layout.innerHeight]);
+
+  const { margins, innerWidth, innerHeight, baseXScale } = layout;
 
   useEffect(() => {
     return () => {
@@ -96,15 +115,25 @@ export function MarketChart({ points }: MarketChartProps) {
           <g transform={`translate(${margins.left}, ${margins.top})`}>
             <XAxis xScale={xScale} innerHeight={innerHeight} />
             <YAxis yScale={yScale} />
-            <PriceSeries points={points} xScale={xScale} yScale={yScale} />
+            <defs>
+              <clipPath id="plot-clip">
+                <rect width={innerWidth} height={innerHeight} />
+              </clipPath>
+            </defs>
 
-            <rect
-              width={innerWidth}
-              height={innerHeight}
-              fill="transparent"
-              onPointerMove={handlePointerMove}
-              onPointerLeave={handlePointerLeave}
-            />
+            <g clipPath="url(#plot-clip)">
+              <PriceSeries points={points} xScale={xScale} yScale={yScale} />
+            </g>
+
+            <g ref={zoomRef}>
+              <rect
+                width={innerWidth}
+                height={innerHeight}
+                fill="transparent"
+                onPointerMove={handlePointerMove}
+                onPointerLeave={handlePointerLeave}
+              />
+            </g>
             {hoverPoint && (
               <>
                 <Crosshair
