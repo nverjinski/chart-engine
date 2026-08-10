@@ -15,6 +15,13 @@ export const PRICE_MARGINS: ChartMargins = {
   left: 56,
 };
 
+export const VOLUME_MARGINS: ChartMargins = {
+  top: 8,
+  right: 16,
+  bottom: 24,
+  left: 56,
+};
+
 export function getInnerSize(
   width: number,
   height: number,
@@ -52,13 +59,33 @@ export function createYScale(points: MarketPoint[], innerHeight: number) {
     .range([innerHeight, 0]);
 }
 
+export function createVolumeScale(points: MarketPoint[], innerHeight: number) {
+  const max = d3.max(points, (d) => d.volume) ?? 0;
+  return d3
+    .scaleLinear()
+    .domain([0, max * 1.05 || 1])
+    .nice()
+    .range([innerHeight, 0]);
+}
+
 export function createYScaleForDomain(
   points: MarketPoint[],
   xDomain: [Date, Date],
   innerHeight: number,
 ) {
   const [x0, x1] = xDomain;
-  const visible = points.filter((d) => d.timestamp > x0 && d.timestamp <= x1);
+  const visible = points.filter((d) => d.timestamp >= x0 && d.timestamp <= x1);
   const source = visible.length > 0 ? visible : points;
   return createYScale(source, innerHeight);
+}
+
+export function createVolumeYScaleForDomain(
+  points: MarketPoint[],
+  xDomain: [Date, Date],
+  innerHeight: number,
+) {
+  const [x0, x1] = xDomain;
+  const visible = points.filter((d) => d.timestamp >= x0 && d.timestamp <= x1);
+  const source = visible.length > 0 ? visible : points;
+  return createVolumeScale(source, innerHeight);
 }
