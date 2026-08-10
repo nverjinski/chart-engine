@@ -112,14 +112,14 @@ export function MarketChart({ points }: MarketChartProps) {
     <div className="market-chart" ref={containerRef}>
       <div className="chart-pane chart-pane--price">
         <ChartSurface width={width} height={PRICE_HEIGHT}>
+          <defs>
+            <clipPath id="plot-clip">
+              <rect width={innerWidth} height={innerHeight} />
+            </clipPath>
+          </defs>
           <g transform={`translate(${margins.left}, ${margins.top})`}>
             <XAxis xScale={xScale} innerHeight={innerHeight} />
             <YAxis yScale={yScale} />
-            <defs>
-              <clipPath id="plot-clip">
-                <rect width={innerWidth} height={innerHeight} />
-              </clipPath>
-            </defs>
 
             <g clipPath="url(#plot-clip)">
               <PriceSeries points={points} xScale={xScale} yScale={yScale} />
