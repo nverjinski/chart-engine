@@ -1,15 +1,14 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 type ChartSurfaceProps = {
-  width: number
-  height: number
-  className?: string
-  children?: ReactNode
-}
+  width: number;
+  height: number;
+  className?: string;
+  children?: ReactNode;
+};
 
 /**
  * SVG viewport for a chart pane.
- * Later steps add margins and an inner plot group; for now we only establish size.
  */
 export function ChartSurface({
   width,
@@ -18,12 +17,12 @@ export function ChartSurface({
   children,
 }: ChartSurfaceProps) {
   if (width <= 0 || height <= 0) {
-    return null
+    return null;
   }
 
   return (
     <svg
-      className={className ? `chart-surface ${className}` : 'chart-surface'}
+      className={className ? `chart-surface ${className}` : "chart-surface"}
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
@@ -32,5 +31,5 @@ export function ChartSurface({
     >
       {children}
     </svg>
-  )
+  );
 }
