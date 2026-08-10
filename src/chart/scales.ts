@@ -51,3 +51,14 @@ export function createYScale(points: MarketPoint[], innerHeight: number) {
     .nice()
     .range([innerHeight, 0]);
 }
+
+export function createYScaleForDomain(
+  points: MarketPoint[],
+  xDomain: [Date, Date],
+  innerHeight: number,
+) {
+  const [x0, x1] = xDomain;
+  const visible = points.filter((d) => d.timestamp > x0 && d.timestamp <= x1);
+  const source = visible.length > 0 ? visible : points;
+  return createYScale(source, innerHeight);
+}
