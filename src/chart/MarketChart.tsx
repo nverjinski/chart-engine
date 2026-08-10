@@ -51,27 +51,27 @@ export function MarketChart({ points }: MarketChartProps) {
     };
   }, [points, width]);
 
+  const { margins, innerWidth, innerHeight, baseXScale } = layout;
+
   const { zoomRef, xDomain } = useChartZoom({
-    baseXScale: layout.baseXScale,
-    innerWidth: layout.innerWidth,
-    innerHeight: layout.innerHeight,
+    baseXScale: baseXScale,
+    innerWidth: innerWidth,
+    innerHeight: innerHeight,
   });
 
   const xScale = useMemo(() => {
-    const scale = layout.baseXScale.copy();
+    const scale = baseXScale.copy();
     if (xDomain) scale.domain(xDomain);
     return scale;
-  }, [layout.baseXScale, xDomain]);
+  }, [baseXScale, xDomain]);
 
   const yScale = useMemo(() => {
-    const domain = (xDomain ?? layout.baseXScale.domain()) as [Date, Date];
+    const domain = (xDomain ?? baseXScale.domain()) as [Date, Date];
     const visible = points.filter(
       (d) => d.timestamp >= domain[0] && d.timestamp <= domain[1],
     );
-    return createYScaleForDomain(visible, domain, layout.innerHeight);
-  }, [points, xDomain, layout.baseXScale, layout.innerHeight]);
-
-  const { margins, innerWidth, innerHeight, baseXScale } = layout;
+    return createYScaleForDomain(visible, domain, innerHeight);
+  }, [points, xDomain, baseXScale, innerHeight]);
 
   useEffect(() => {
     return () => {
