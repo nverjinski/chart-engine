@@ -84,3 +84,23 @@
 .price-series {
   color: #1f2c03;
 }
+
+.crosshair {
+  color: #6b6b6b;
+  opacity: 0.7;
+}
+
+.tooltip-box {
+  fill: #ffffff;
+  stroke: var(--border);
+}
+
+.tooltip-text {
+  fill: var(--text);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.tooltip-price {
+  font-weight: 600;
+}

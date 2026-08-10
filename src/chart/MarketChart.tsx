@@ -1,9 +1,13 @@
-import { useMemo, useRef } from "react";
+import * as d3 from "d3";
+import { useState, useMemo, useRef } from "react";
 import { ChartSurface } from "./ChartSurface";
+import { Crosshair } from "./Crosshair";
+import { Tooltip } from "./Tooltip";
 import { XAxis } from "./XAxis";
 import { YAxis } from "./YAxis";
-import { useContainerSize } from "./useContainerSize";
 import { PriceSeries } from "./PriceSeries";
+import { useContainerSize } from "./useContainerSize";
+import { findNearestPoint } from "./nearestPoint";
 import {
   PRICE_MARGINS,
   getInnerSize,
@@ -23,6 +27,8 @@ type MarketChartProps = {
  * Top-level chart composition.
  */
 export function MarketChart({ points }: MarketChartProps) {
+  const [hoverPoint, setHoverPoint] = useState<MarketPoint | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const { width } = useContainerSize(containerRef);
 
@@ -44,7 +50,17 @@ export function MarketChart({ points }: MarketChartProps) {
     };
   }, [points, width]);
 
-  const { margins, innerHeight, xScale, yScale } = layout;
+  const { margins, innerWidth, innerHeight, xScale, yScale } = layout;
+
+  function handlePointerMove(event: React.PointerEvent<SVGRectElement>) {
+    const [pointerX] = d3.pointer(event);
+    const time = xScale.invert(pointerX);
+    setHoverPoint(findNearestPoint(points, time));
+  }
+
+  function handlePointerLeave() {
+    setHoverPoint(null);
+  }
 
   return (
     <div className="market-chart" ref={containerRef}>
@@ -54,6 +70,30 @@ export function MarketChart({ points }: MarketChartProps) {
             <XAxis xScale={xScale} innerHeight={innerHeight} />
             <YAxis yScale={yScale} />
             <PriceSeries points={points} xScale={xScale} yScale={yScale} />
+
+            <rect
+              width={innerWidth}
+              height={innerHeight}
+              fill="transparent"
+              onPointerMove={handlePointerMove}
+              onPointerLeave={handlePointerLeave}
+            />
+            {hoverPoint && (
+              <>
+                <Crosshair
+                  point={hoverPoint}
+                  xScale={xScale}
+                  yScale={yScale}
+                  innerHeight={innerHeight}
+                />
+                <Tooltip
+                  point={hoverPoint}
+                  xScale={xScale}
+                  yScale={yScale}
+                  innerWidth={innerWidth}
+                />
+              </>
+            )}
           </g>
         </ChartSurface>
       </div>
