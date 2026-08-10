@@ -104,3 +104,8 @@
 .tooltip-price {
   font-weight: 600;
 }
+
+.volume-series {
+  color: #6b6b6b;
+  opacity: 0.75;
+}

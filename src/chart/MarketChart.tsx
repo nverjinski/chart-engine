@@ -6,13 +6,16 @@ import { Tooltip } from "./Tooltip";
 import { XAxis } from "./XAxis";
 import { YAxis } from "./YAxis";
 import { PriceSeries } from "./PriceSeries";
+import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
 import { findNearestPoint } from "./nearestPoint";
 import {
   PRICE_MARGINS,
+  VOLUME_MARGINS,
   getInnerSize,
   createXScale,
   createYScaleForDomain,
+  createVolumeScale,
 } from "./scales";
 import { useChartZoom } from "./useChartZoom";
 import type { MarketPoint } from "../data/types";
@@ -51,6 +54,20 @@ export function MarketChart({ points }: MarketChartProps) {
     };
   }, [points, width]);
 
+  const volumeLayout = useMemo(() => {
+    const margins = VOLUME_MARGINS;
+    const { innerWidth, innerHeight } = getInnerSize(
+      width,
+      VOLUME_HEIGHT,
+      margins,
+    );
+    return {
+      margins,
+      innerWidth,
+      innerHeight,
+    };
+  }, [width]);
+
   const { margins, innerWidth, innerHeight, baseXScale } = layout;
 
   const { zoomRef, xDomain } = useChartZoom({
@@ -72,6 +89,14 @@ export function MarketChart({ points }: MarketChartProps) {
     );
     return createYScaleForDomain(visible, domain, innerHeight);
   }, [points, xDomain, baseXScale, innerHeight]);
+
+  const yVolumeScale = useMemo(() => {
+    const domain = (xDomain ?? baseXScale.domain()) as [Date, Date];
+    const visible = points.filter(
+      (d) => d.timestamp >= domain[0] && d.timestamp <= domain[1],
+    );
+    return createVolumeScale(visible, volumeLayout.innerHeight);
+  }, [xDomain, baseXScale, points, volumeLayout.innerHeight]);
 
   useEffect(() => {
     return () => {
@@ -154,8 +179,37 @@ export function MarketChart({ points }: MarketChartProps) {
         </ChartSurface>
       </div>
       <div className="chart-pane chart-pane--volume">
-        <ChartSurface width={width} height={VOLUME_HEIGHT} />
+        <ChartSurface width={width} height={VOLUME_HEIGHT}>
+          <defs>
+            <clipPath id="volume-clip">
+              <rect width={innerWidth} height={volumeLayout.innerHeight} />
+            </clipPath>
+          </defs>
+          <g
+            transform={`translate(${volumeLayout.margins.left}, ${volumeLayout.margins.top})`}
+          >
+            <VolumeSeries
+              points={points}
+              xScale={xScale}
+              yScale={yVolumeScale}
+            />
+            <XAxis xScale={xScale} innerHeight={volumeLayout.innerHeight} />
+            {hoverPoint && (
+              <Crosshair
+                point={hoverPoint}
+                xScale={xScale}
+                yScale={yVolumeScale}
+                innerHeight={volumeLayout.innerHeight}
+                verticalOnly={true}
+              />
+            )}
+          </g>
+        </ChartSurface>
       </div>
     </div>
   );
 }
+
+/*
+
+*/

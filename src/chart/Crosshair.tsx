@@ -6,6 +6,8 @@ type CrosshairProps = {
   xScale: ScaleTime<number, number>;
   yScale: ScaleLinear<number, number>;
   innerHeight: number;
+  verticalOnly?: boolean;
+  horizontalOnly?: boolean;
 };
 
 export function Crosshair({
@@ -13,15 +15,29 @@ export function Crosshair({
   xScale,
   yScale,
   innerHeight,
+  verticalOnly = false,
+  horizontalOnly = false,
 }: CrosshairProps) {
   const x = xScale(point.timestamp) ?? 0;
   const y = yScale(point.price) ?? 0;
 
   return (
     <g className="crosshair" pointerEvents="none">
-      <line x1={x} x2={x} y1={0} y2={innerHeight} stroke="currentColor" />
-      <line x1={0} x2={xScale.range()[1]} y1={y} y2={y} stroke="currentColor" />
-      <circle cx={x} cy={y} r={3.5} fill="currentColor" />
+      {!horizontalOnly && (
+        <line x1={x} x2={x} y1={0} y2={innerHeight} stroke="currentColor" />
+      )}
+      {!verticalOnly && (
+        <line
+          x1={0}
+          x2={xScale.range()[1]}
+          y1={y}
+          y2={y}
+          stroke="currentColor"
+        />
+      )}
+      {!verticalOnly && !horizontalOnly && (
+        <circle cx={x} cy={y} r={3.5} fill="currentColor" />
+      )}
     </g>
   );
 }
