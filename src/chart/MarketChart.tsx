@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useState, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ChartSurface } from "./ChartSurface";
 import { Crosshair } from "./Crosshair";
 import { Tooltip } from "./Tooltip";
@@ -30,6 +30,8 @@ export function MarketChart({ points }: MarketChartProps) {
   const [hoverPoint, setHoverPoint] = useState<MarketPoint | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const pointerXRef = useRef<number | null>(null);
   const { width } = useContainerSize(containerRef);
 
   const layout = useMemo(() => {
@@ -52,13 +54,38 @@ export function MarketChart({ points }: MarketChartProps) {
 
   const { margins, innerWidth, innerHeight, xScale, yScale } = layout;
 
+  useEffect(() => {
+    return () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
+
   function handlePointerMove(event: React.PointerEvent<SVGRectElement>) {
-    const [pointerX] = d3.pointer(event);
-    const time = xScale.invert(pointerX);
-    setHoverPoint(findNearestPoint(points, time));
+    pointerXRef.current = d3.pointer(event)[0];
+
+    if (frameRef.current !== null) return;
+
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      const pointerX = pointerXRef.current;
+
+      if (pointerX === null) return;
+
+      const time = xScale.invert(pointerX);
+      setHoverPoint(findNearestPoint(points, time));
+    });
   }
 
   function handlePointerLeave() {
+    pointerXRef.current = null;
+
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+
     setHoverPoint(null);
   }
 
