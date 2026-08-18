@@ -6,8 +6,17 @@ import "./styles/chart.css";
 
 function App() {
   const history = useMemo(() => generateMarketData({ count: 3000 }), []);
-  const { points, playing, speed, cursor, total, toggle, cycleSpeed, reset } =
-    useMarketReplay({ history });
+  const {
+    points,
+    playing,
+    speed,
+    cursor,
+    total,
+    showAll,
+    togglePause,
+    cycleSpeed,
+    reset,
+  } = useMarketReplay({ history, initialVisible: 100 });
 
   const first = points[0];
   const last = points[points.length - 1];
@@ -17,7 +26,7 @@ function App() {
       <header className="app-header">
         <h1 className="app-title">AAPL</h1>
         <div className="app-controls">
-          <button type="button" onClick={toggle}>
+          <button type="button" onClick={togglePause}>
             {playing ? "❚❚" : "Replay ▶"}
           </button>
           <button type="button" onClick={cycleSpeed}>
@@ -25,6 +34,9 @@ function App() {
           </button>
           <button type="button" onClick={reset}>
             Reset
+          </button>
+          <button type="button" onClick={showAll} disabled={cursor === total}>
+            Show All
           </button>
         </div>
       </header>

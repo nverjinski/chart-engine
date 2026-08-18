@@ -13,6 +13,7 @@ const INITIAL_VISIBLE = 200;
 type UseMarketReplayArgs = {
   history: MarketPoint[];
   initialVisible?: number;
+  showAll?: boolean;
 };
 
 export function useMarketReplay({
@@ -54,7 +55,11 @@ export function useMarketReplay({
     speed,
     cursor,
     total: history.length,
-    toggle: () => setPlaying((p) => !p),
+    togglePause: () => setPlaying((p) => !p),
+    showAll: () => {
+      setCursor(history.length);
+      setPlaying(false);
+    },
     cycleSpeed: () =>
       setSpeed((s) => SPEEDS[(SPEEDS.indexOf(s) + 1) % SPEEDS.length]!),
     reset: () => {
