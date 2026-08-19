@@ -16,25 +16,18 @@ export const VolumeSeries = ({ points, xScale, yScale }: VolumeSeriesProps) => {
   const pathD = useMemo(() => {
     if (points.length === 0) return "";
 
-    const domain = xScale.domain() as [Date, Date];
-    const visible = points.filter(
-      (d) => d.timestamp >= domain[0] && d.timestamp <= domain[1],
-    );
-
-    if (visible.length === 0) return "";
-
     const innerHeight = yScale.range()[0];
     const [rangeStart, rangeEnd] = xScale.range();
     const plotWidth = rangeEnd - rangeStart;
 
     const barWidth =
-      visible.length > 1
-        ? Math.max(1, plotWidth / (visible.length - 1))
+      points.length > 1
+        ? Math.max(1, plotWidth / (points.length - 1))
         : Math.max(1, plotWidth);
 
     // Build one compound path: each bar is a closed rectangle subpath.
     let d = "";
-    for (const point of visible) {
+    for (const point of points) {
       const x = xScale(point.timestamp) ?? 0;
       const y = yScale(point.volume) ?? innerHeight;
       const x0 = x - barWidth / 2;

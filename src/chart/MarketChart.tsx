@@ -1,5 +1,11 @@
 import * as d3 from "d3";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { createXScale } from "../chart-core/scales/createXScale";
+import { createYScale } from "../chart-core/scales/createYScale";
+import { getXDomain } from "../chart-core/domains/getXDomain";
+import { getPriceDomain } from "../chart-core/domains/getPriceDomain";
+import { getVolumeDomain } from "../chart-core/domains/getVolumeDomain";
+import { getVisibleWindow } from "../chart-core/domains/getVisibleWindow";
 import { ChartSurface } from "./ChartSurface";
 import { Crosshair } from "./Crosshair";
 import { Tooltip } from "./Tooltip";
@@ -9,14 +15,7 @@ import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
 import { findNearestPoint } from "./nearestPoint";
-import {
-  PRICE_MARGINS,
-  VOLUME_MARGINS,
-  getInnerSize,
-  createXScale,
-  createYScaleForDomain,
-  createVolumeScale,
-} from "./scales";
+import { PRICE_MARGINS, VOLUME_MARGINS, getInnerSize } from "./scales";
 import { useChartZoom } from "./useChartZoom";
 import type { MarketPoint } from "../data/types";
 
@@ -45,7 +44,7 @@ export function MarketChart({ points }: MarketChartProps) {
       PRICE_HEIGHT,
       margins,
     );
-    const baseXScale = createXScale(points, innerWidth);
+    const baseXScale = createXScale(getXDomain(points), [0, innerWidth]);
     return {
       margins,
       innerWidth,
@@ -82,21 +81,23 @@ export function MarketChart({ points }: MarketChartProps) {
     return scale;
   }, [baseXScale, xDomain]);
 
+  const visibleDomain = xDomain ?? (baseXScale.domain() as [Date, Date]);
+  const { slice: visible } = useMemo(
+    () => getVisibleWindow(points, visibleDomain),
+    [points, visibleDomain[0], visibleDomain[1]],
+  );
+  const ySource = visible.length > 0 ? visible : points;
+
   const yScale = useMemo(() => {
-    const domain = (xDomain ?? baseXScale.domain()) as [Date, Date];
-    const visible = points.filter(
-      (d) => d.timestamp >= domain[0] && d.timestamp <= domain[1],
-    );
-    return createYScaleForDomain(visible, domain, innerHeight);
-  }, [points, xDomain, baseXScale, innerHeight]);
+    return createYScale(getPriceDomain(ySource), [innerHeight, 0]);
+  }, [ySource, innerHeight]);
 
   const yVolumeScale = useMemo(() => {
-    const domain = (xDomain ?? baseXScale.domain()) as [Date, Date];
-    const visible = points.filter(
-      (d) => d.timestamp >= domain[0] && d.timestamp <= domain[1],
-    );
-    return createVolumeScale(visible, volumeLayout.innerHeight);
-  }, [xDomain, baseXScale, points, volumeLayout.innerHeight]);
+    return createYScale(getVolumeDomain(ySource), [
+      volumeLayout.innerHeight,
+      0,
+    ]);
+  }, [ySource, volumeLayout.innerHeight]);
 
   useEffect(() => {
     return () => {
@@ -189,7 +190,7 @@ export function MarketChart({ points }: MarketChartProps) {
             transform={`translate(${volumeLayout.margins.left}, ${volumeLayout.margins.top})`}
           >
             <VolumeSeries
-              points={points}
+              points={visible}
               xScale={xScale}
               yScale={yVolumeScale}
             />

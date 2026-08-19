@@ -1,7 +1,7 @@
 import { extent } from "d3";
 import { type MarketPoint } from "../../data/types";
 
-export function getPriceDomain(points: MarketPoint[]) {
+export function getPriceDomain(points: MarketPoint[]): [number, number] {
   const [min, max] = extent(points, (d) => d.price);
 
   if (min === undefined || max === undefined) {
