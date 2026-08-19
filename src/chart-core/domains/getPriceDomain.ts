@@ -8,7 +8,7 @@ export function getPriceDomain(points: MarketPoint[]) {
     throw new Error("getPriceDomain: empty data");
   }
 
-  const pad = (min - max) * 0.05 || 1;
+  const pad = (max - min) * 0.05 || 1;
 
   return [min - pad, max + pad];
 }
