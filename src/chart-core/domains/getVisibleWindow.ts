@@ -1,4 +1,4 @@
-import { bisector } from "d3";
+import { timestampBisector } from "../interaction/bisectors";
 
 export type VisibleWindow<T> = {
   startIndex: number;
@@ -13,9 +13,8 @@ export function getVisibleWindow<T extends { timestamp: Date }>(
   if (!points.length) return { startIndex: 0, endIndex: 0, slice: [] };
 
   const [x0, x1] = xDomain;
-  const byTime = bisector<T, Date>((d) => d.timestamp);
-  const startIndex = byTime.left(points, x0); // left: first index greater or equal to value
-  const endIndex = byTime.right(points, x1); // right: first index greater than value
+  const startIndex = timestampBisector.left(points, x0); // left: first index greater or equal to value
+  const endIndex = timestampBisector.right(points, x1); // right: first index greater than value
 
   return {
     slice: points.slice(startIndex, endIndex),

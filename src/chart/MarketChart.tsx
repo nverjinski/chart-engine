@@ -6,6 +6,7 @@ import { getXDomain } from "../chart-core/domains/getXDomain";
 import { getPriceDomain } from "../chart-core/domains/getPriceDomain";
 import { getVolumeDomain } from "../chart-core/domains/getVolumeDomain";
 import { getVisibleWindow } from "../chart-core/domains/getVisibleWindow";
+import { findNearestByTime } from "../chart-core/interaction/bisectors";
 import { ChartSurface } from "./ChartSurface";
 import { Crosshair } from "./Crosshair";
 import { Tooltip } from "./Tooltip";
@@ -14,7 +15,6 @@ import { YAxis } from "./YAxis";
 import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
-import { findNearestPoint } from "./nearestPoint";
 import { PRICE_MARGINS, VOLUME_MARGINS, getInnerSize } from "./layout";
 import { useChartZoom } from "./useChartZoom";
 import type { MarketPoint } from "../data/types";
@@ -119,7 +119,7 @@ export function MarketChart({ points }: MarketChartProps) {
       if (pointerX === null) return;
 
       const time = xScale.invert(pointerX);
-      setHoverPoint(findNearestPoint(points, time));
+      setHoverPoint(findNearestByTime(points, time));
     });
   }
 
