@@ -1,12 +1,19 @@
 import * as d3 from "d3";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { createXScale } from "../chart-core/scales/createXScale";
-import { createYScale } from "../chart-core/scales/createYScale";
-import { getXDomain } from "../chart-core/domains/getXDomain";
-import { getPriceDomain } from "../chart-core/domains/getPriceDomain";
-import { getVolumeDomain } from "../chart-core/domains/getVolumeDomain";
-import { getVisibleWindow } from "../chart-core/domains/getVisibleWindow";
-import { findNearestByTime } from "../chart-core/interaction/bisectors";
+
+import type { MarketPoint } from "@/data";
+import {
+  createXScale,
+  createYScale,
+  findNearestByTime,
+  getInnerSize,
+  getPriceDomain,
+  getVisibleWindow,
+  getVolumeDomain,
+  getXDomain,
+} from "@/chart-core";
+import { PRICE_MARGINS, VOLUME_MARGINS } from "@/features/ChartEngineLab";
+
 import { ChartSurface } from "./ChartSurface";
 import { Crosshair } from "./Crosshair";
 import { Tooltip } from "./Tooltip";
@@ -15,13 +22,7 @@ import { YAxis } from "./YAxis";
 import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
-import {
-  PRICE_MARGINS,
-  VOLUME_MARGINS,
-} from "../features/ChartEngineLab/panels/defaults";
-import { getInnerSize } from "../chart-core/viewport/layout";
 import { useChartZoom } from "./useChartZoom";
-import type { MarketPoint } from "../data/types";
 
 const PRICE_HEIGHT = 480;
 const VOLUME_HEIGHT = 120;

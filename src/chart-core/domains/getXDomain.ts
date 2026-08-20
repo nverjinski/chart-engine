@@ -1,5 +1,5 @@
 import { extent } from "d3";
-import { type MarketPoint } from "../../data/types";
+import type { MarketPoint } from "@/data";
 
 export function getXDomain(points: MarketPoint[]): [Date, Date] {
   const [min, max] = extent(points, (d) => d.timestamp);

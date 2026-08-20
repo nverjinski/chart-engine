@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { MarketPoint } from "../data/types";
+import type { MarketPoint } from "@/data";
 
 export const SPEEDS = [1, 2, 4, 8] as const;
 export type ReplaySpeed = (typeof SPEEDS)[number];

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { ScaleLinear, ScaleTime } from "d3";
-import type { MarketPoint } from "../data/types";
+import type { MarketPoint } from "@/data";
 
 type VolumeSeriesProps = {
   points: MarketPoint[];

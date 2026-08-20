@@ -1,5 +1,5 @@
 import type { ScaleLinear } from "d3";
-import { formatPrice } from "../chart-core/formatting/formatPrice";
+import { formatPrice } from "@/chart-core";
 
 type YAxisProps = {
   yScale: ScaleLinear<number, number>;

@@ -1,4 +1,4 @@
-import { timestampBisector } from "../interaction/bisectors";
+import { timestampBisector } from "@/chart-core/interaction";
 
 export type VisibleWindow<T> = {
   startIndex: number;

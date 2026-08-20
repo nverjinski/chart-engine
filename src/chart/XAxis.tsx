@@ -1,5 +1,5 @@
 import type { ScaleTime } from "d3";
-import { formatTime } from "../chart-core/formatting/formatTime";
+import { formatTime } from "@/chart-core";
 
 type XAxisProps = {
   xScale: ScaleTime<number, number>;

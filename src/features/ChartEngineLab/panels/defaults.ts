@@ -1,4 +1,4 @@
-import { type ChartMargins } from "../../../chart-core/viewport/viewportTypes";
+import type { ChartMargins } from "@/chart-core";
 export const PRICE_MARGINS: ChartMargins = {
   top: 16,
   right: 16,

@@ -1,6 +1,6 @@
 import type { ScaleLinear, ScaleTime } from "d3";
-import type { MarketPoint } from "../data/types";
-import { formatPrice } from "../chart-core/formatting/formatPrice";
+import type { MarketPoint } from "@/data";
+import { formatPrice } from "@/chart-core";
 
 type TooltipProps = {
   point: MarketPoint;
