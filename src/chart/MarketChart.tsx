@@ -15,7 +15,7 @@ import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
 import { findNearestPoint } from "./nearestPoint";
-import { PRICE_MARGINS, VOLUME_MARGINS, getInnerSize } from "./scales";
+import { PRICE_MARGINS, VOLUME_MARGINS, getInnerSize } from "./layout";
 import { useChartZoom } from "./useChartZoom";
 import type { MarketPoint } from "../data/types";
 
