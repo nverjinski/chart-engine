@@ -1,4 +1,5 @@
 import type { ScaleLinear } from "d3";
+import { formatPrice } from "../chart-core/formatting/formatPrice";
 
 type YAxisProps = {
   yScale: ScaleLinear<number, number>;
@@ -26,7 +27,7 @@ export function YAxis({ yScale }: YAxisProps) {
               fill="currentColor"
               fontSize={11}
             >
-              {tick.toFixed(2)}
+              {formatPrice(tick)}
             </text>
           </g>
         );

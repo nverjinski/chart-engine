@@ -1,5 +1,6 @@
 import type { ScaleLinear, ScaleTime } from "d3";
 import type { MarketPoint } from "../data/types";
+import { formatPrice } from "../chart-core/formatting/formatPrice";
 
 type TooltipProps = {
   point: MarketPoint;
@@ -44,7 +45,7 @@ export function Tooltip({ point, xScale, yScale, innerWidth }: TooltipProps) {
         {timeLabel}
       </text>
       <text x={8} y={32} className="tooltip-text">
-        ${point.price.toFixed(2)}
+        ${formatPrice(point.price)}
       </text>
     </g>
   );
