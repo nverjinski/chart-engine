@@ -15,7 +15,11 @@ import { YAxis } from "./YAxis";
 import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
-import { PRICE_MARGINS, VOLUME_MARGINS, getInnerSize } from "./layout";
+import {
+  PRICE_MARGINS,
+  VOLUME_MARGINS,
+} from "../features/ChartEngineLab/panels/defaults";
+import { getInnerSize } from "../chart-core/viewport/layout";
 import { useChartZoom } from "./useChartZoom";
 import type { MarketPoint } from "../data/types";
 
