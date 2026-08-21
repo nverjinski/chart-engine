@@ -4,15 +4,14 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import type { MarketPoint } from "@/data";
 import {
   createXScale,
-  createYScale,
   findNearestByTime,
   getInnerSize,
   getPriceDomain,
-  getVisibleWindow,
   getVolumeDomain,
   getXDomain,
 } from "@/chart-core";
 import { PRICE_MARGINS, VOLUME_MARGINS } from "@/features/ChartEngineLab";
+import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
 import { ChartSurface } from "./ChartSurface";
 import { Crosshair } from "./Crosshair";
@@ -42,67 +41,63 @@ export function MarketChart({ points }: MarketChartProps) {
   const pointerXRef = useRef<number | null>(null);
   const { width } = useContainerSize(containerRef);
 
-  const layout = useMemo(() => {
+  const pricePlotSize = useMemo(() => {
     const margins = PRICE_MARGINS;
-    const { innerWidth, innerHeight } = getInnerSize(
-      width,
-      PRICE_HEIGHT,
-      margins,
-    );
-    const baseXScale = createXScale(getXDomain(points), [0, innerWidth]);
+    const height = PRICE_HEIGHT;
     return {
-      margins,
-      innerWidth,
-      innerHeight,
-      baseXScale,
-    };
-  }, [points, width]);
-
-  const volumeLayout = useMemo(() => {
-    const margins = VOLUME_MARGINS;
-    const { innerWidth, innerHeight } = getInnerSize(
+      ...getInnerSize(width, height, margins),
       width,
-      VOLUME_HEIGHT,
+      height,
       margins,
-    );
-    return {
-      margins,
-      innerWidth,
-      innerHeight,
     };
   }, [width]);
 
-  const { margins, innerWidth, innerHeight, baseXScale } = layout;
+  const volumePlotSize = useMemo(() => {
+    const margins = VOLUME_MARGINS;
+    const height = VOLUME_HEIGHT;
+    return {
+      ...getInnerSize(width, height, margins),
+      width,
+      height,
+      margins,
+    };
+  }, [width]);
+
+  const baseXScale = useMemo(() => {
+    return createXScale(getXDomain(points), [0, pricePlotSize.innerWidth]);
+  }, [points, pricePlotSize.innerWidth]);
 
   const { zoomRef, xDomain } = useChartZoom({
     baseXScale: baseXScale,
-    innerWidth: innerWidth,
-    innerHeight: innerHeight,
+    innerWidth: pricePlotSize.innerWidth,
+    innerHeight: pricePlotSize.innerHeight,
   });
 
-  const xScale = useMemo(() => {
-    const scale = baseXScale.copy();
-    if (xDomain) scale.domain(xDomain);
-    return scale;
-  }, [baseXScale, xDomain]);
+  const sharedViewport = useMemo(() => {
+    return buildSharedViewport({
+      points,
+      innerWidth: pricePlotSize.innerWidth,
+      xDomain,
+    });
+  }, [points, pricePlotSize.innerWidth, xDomain]);
 
-  const visibleDomain = xDomain ?? (baseXScale.domain() as [Date, Date]);
-  const { slice: visible } = useMemo(
-    () => getVisibleWindow(points, visibleDomain),
-    [points, visibleDomain[0], visibleDomain[1]],
-  );
-  const ySource = visible.length > 0 ? visible : points;
+  const priceViewport = useMemo(() => {
+    return buildPanelViewport({
+      shared: sharedViewport,
+      points,
+      size: pricePlotSize,
+      getYDomain: getPriceDomain,
+    });
+  }, [sharedViewport, points, pricePlotSize]);
 
-  const yScale = useMemo(() => {
-    return createYScale(getPriceDomain(ySource), [innerHeight, 0]);
-  }, [ySource, innerHeight]);
-
-  const yVolumeScale = useMemo(() => {
-    return createYScale(getVolumeDomain(ySource), [
-      volumeLayout.innerHeight,
-      0,
-    ]);
-  }, [ySource, volumeLayout.innerHeight]);
+  const volumeViewport = useMemo(() => {
+    return buildPanelViewport({
+      shared: sharedViewport,
+      points,
+      size: volumePlotSize,
+      getYDomain: getVolumeDomain,
+    });
+  }, [sharedViewport, points, volumePlotSize]);
 
   useEffect(() => {
     return () => {
@@ -123,7 +118,7 @@ export function MarketChart({ points }: MarketChartProps) {
 
       if (pointerX === null) return;
 
-      const time = xScale.invert(pointerX);
+      const time = sharedViewport.xScale.invert(pointerX);
       setHoverPoint(findNearestByTime(points, time));
     });
   }
@@ -142,24 +137,39 @@ export function MarketChart({ points }: MarketChartProps) {
   return (
     <div className="market-chart" ref={containerRef}>
       <div className="chart-pane chart-pane--price">
-        <ChartSurface width={width} height={PRICE_HEIGHT}>
+        <ChartSurface
+          width={priceViewport.size.width}
+          height={priceViewport.size.height}
+        >
           <defs>
             <clipPath id="plot-clip">
-              <rect width={innerWidth} height={innerHeight} />
+              <rect
+                width={priceViewport.size.innerWidth}
+                height={priceViewport.size.innerHeight}
+              />
             </clipPath>
           </defs>
-          <g transform={`translate(${margins.left}, ${margins.top})`}>
-            <XAxis xScale={xScale} innerHeight={innerHeight} />
-            <YAxis yScale={yScale} />
+          <g
+            transform={`translate(${priceViewport.size.margins.left}, ${priceViewport.size.margins.top})`}
+          >
+            <XAxis
+              xScale={priceViewport.xScale}
+              innerHeight={priceViewport.size.innerHeight}
+            />
+            <YAxis yScale={priceViewport.yScale} />
 
             <g clipPath="url(#plot-clip)">
-              <PriceSeries points={points} xScale={xScale} yScale={yScale} />
+              <PriceSeries
+                points={priceViewport.visible}
+                xScale={priceViewport.xScale}
+                yScale={priceViewport.yScale}
+              />
             </g>
 
             <g ref={zoomRef}>
               <rect
-                width={innerWidth}
-                height={innerHeight}
+                width={priceViewport.size.innerWidth}
+                height={priceViewport.size.innerHeight}
                 fill="transparent"
                 onPointerMove={handlePointerMove}
                 onPointerLeave={handlePointerLeave}
@@ -169,15 +179,15 @@ export function MarketChart({ points }: MarketChartProps) {
               <>
                 <Crosshair
                   point={hoverPoint}
-                  xScale={xScale}
-                  yScale={yScale}
-                  innerHeight={innerHeight}
+                  xScale={priceViewport.xScale}
+                  yScale={priceViewport.yScale}
+                  innerHeight={priceViewport.size.innerHeight}
                 />
                 <Tooltip
                   point={hoverPoint}
-                  xScale={xScale}
-                  yScale={yScale}
-                  innerWidth={innerWidth}
+                  xScale={priceViewport.xScale}
+                  yScale={priceViewport.yScale}
+                  innerWidth={priceViewport.size.innerWidth}
                 />
               </>
             )}
@@ -185,27 +195,36 @@ export function MarketChart({ points }: MarketChartProps) {
         </ChartSurface>
       </div>
       <div className="chart-pane chart-pane--volume">
-        <ChartSurface width={width} height={VOLUME_HEIGHT}>
+        <ChartSurface
+          width={volumeViewport.size.width}
+          height={volumeViewport.size.height}
+        >
           <defs>
             <clipPath id="volume-clip">
-              <rect width={innerWidth} height={volumeLayout.innerHeight} />
+              <rect
+                width={volumeViewport.size.innerWidth}
+                height={volumeViewport.size.innerHeight}
+              />
             </clipPath>
           </defs>
           <g
-            transform={`translate(${volumeLayout.margins.left}, ${volumeLayout.margins.top})`}
+            transform={`translate(${volumeViewport.size.margins.left}, ${volumeViewport.size.margins.top})`}
           >
             <VolumeSeries
-              points={visible}
-              xScale={xScale}
-              yScale={yVolumeScale}
+              points={volumeViewport.visible}
+              xScale={volumeViewport.xScale}
+              yScale={volumeViewport.yScale}
             />
-            <XAxis xScale={xScale} innerHeight={volumeLayout.innerHeight} />
+            <XAxis
+              xScale={volumeViewport.xScale}
+              innerHeight={volumeViewport.size.innerHeight}
+            />
             {hoverPoint && (
               <Crosshair
                 point={hoverPoint}
-                xScale={xScale}
-                yScale={yVolumeScale}
-                innerHeight={volumeLayout.innerHeight}
+                xScale={volumeViewport.xScale}
+                yScale={volumeViewport.yScale}
+                innerHeight={volumeViewport.size.innerHeight}
                 verticalOnly={true}
               />
             )}

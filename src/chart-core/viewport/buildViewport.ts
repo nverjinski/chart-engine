@@ -1,4 +1,4 @@
-import type { MarketPoint } from "@/data/types";
+import type { MarketPoint } from "@/data";
 import { getXDomain, getVisibleWindow } from "@/chart-core/domains";
 import { createXScale, createYScale } from "@/chart-core/scales";
 import type {
@@ -7,8 +7,7 @@ import type {
   SharedViewport,
   PanelViewport,
 } from "./viewportTypes";
-import type { ChartMargins } from "./viewportTypes";
-import { getInnerSize } from "./layout";
+import type { PlotSize } from "./viewportTypes";
 
 export function buildSharedViewport(args: {
   points: MarketPoint[];
@@ -29,31 +28,38 @@ export function buildSharedViewport(args: {
 export function buildPanelViewport(args: {
   shared: SharedViewport;
   points: MarketPoint[];
-  width: number;
-  height: number;
-  margins: ChartMargins;
+  size: PlotSize;
   getYDomain: (visible: MarketPoint[]) => NumericDomain;
 }): PanelViewport {
-  const { points, shared, getYDomain, width, height, margins } = args;
-  const { slice: visible } = getVisibleWindow(points, shared.xDomain);
-  const ySource = visible.length ? visible : points;
+  const {
+    points,
+    shared,
+    getYDomain,
+    size: { width, height, margins, innerWidth, innerHeight },
+  } = args;
+  const window = getVisibleWindow(points, shared.xDomain);
+  const ySource =
+    window.startIndex === 0 && window.endIndex === points.length
+      ? points
+      : window.slice;
   const yDomain = getYDomain(ySource);
+  const yScale = createYScale(yDomain, [innerHeight, 0]);
 
-  const inner = getInnerSize(width, height, margins);
-
-  const yScale = createYScale(yDomain, [inner.innerHeight, 0]);
+  console.count("buildPanelViewport");
+  console.log(ySource.length, ySource === points);
 
   return {
     xDomain: shared.xDomain,
     xScale: shared.xScale,
     yDomain,
     yScale,
+    visible: ySource,
     size: {
       width,
       height,
       margins,
-      innerWidth: inner.innerWidth,
-      innerHeight: inner.innerHeight,
+      innerWidth: innerWidth,
+      innerHeight: innerHeight,
     },
   };
 }
