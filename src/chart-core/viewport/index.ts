@@ -8,3 +8,5 @@ export type {
   SharedViewport,
   PanelViewport,
 } from "./viewportTypes";
+
+export { buildSharedViewport, buildPanelViewport } from "./buildViewport";
