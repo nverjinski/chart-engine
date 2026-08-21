@@ -9,6 +9,7 @@ import {
   getPriceDomain,
   getVolumeDomain,
   getXDomain,
+  getVisibleWindow,
 } from "@/chart-core";
 import { PRICE_MARGINS, VOLUME_MARGINS } from "@/features/ChartEngineLab";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
@@ -73,6 +74,10 @@ export function MarketChart({ points }: MarketChartProps) {
     innerHeight: pricePlotSize.innerHeight,
   });
 
+  const visibleWindow = useMemo(() => {
+    return getVisibleWindow(points, xDomain ?? getXDomain(points));
+  }, [points, xDomain]);
+
   const sharedViewport = useMemo(() => {
     return buildSharedViewport({
       points,
@@ -85,19 +90,21 @@ export function MarketChart({ points }: MarketChartProps) {
     return buildPanelViewport({
       shared: sharedViewport,
       points,
+      visible: visibleWindow,
       size: pricePlotSize,
       getYDomain: getPriceDomain,
     });
-  }, [sharedViewport, points, pricePlotSize]);
+  }, [sharedViewport, visibleWindow, points, pricePlotSize]);
 
   const volumeViewport = useMemo(() => {
     return buildPanelViewport({
       shared: sharedViewport,
       points,
+      visible: visibleWindow,
       size: volumePlotSize,
       getYDomain: getVolumeDomain,
     });
-  }, [sharedViewport, points, volumePlotSize]);
+  }, [sharedViewport, visibleWindow, points, volumePlotSize]);
 
   useEffect(() => {
     return () => {
