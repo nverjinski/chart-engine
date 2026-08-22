@@ -1,5 +1,5 @@
 import type { MarketPoint } from "@/data";
-import { getXDomain, type VisibleWindow } from "@/chart-core/domains";
+import { getXDomain } from "@/chart-core/domains";
 import { createXScale, createYScale } from "@/chart-core/scales";
 import type {
   TimeDomain,
@@ -28,26 +28,18 @@ export function buildSharedViewport(args: {
 export function buildPanelViewport(args: {
   shared: SharedViewport;
   points: MarketPoint[];
-  visible: VisibleWindow<MarketPoint>;
   size: PlotSize;
   getYDomain: (visible: MarketPoint[]) => NumericDomain;
 }): PanelViewport {
   const {
     points,
     shared,
-    visible,
     getYDomain,
     size: { width, height, margins, innerWidth, innerHeight },
   } = args;
 
-  // Reuse the original array when the window covers the full series.
-  const isFullWindow =
-    visible.startIndex === 0 && visible.endIndex === points.length;
-  const windowPoints = isFullWindow ? points : visible.slice;
-
   // Domains need a non-empty source; series should draw nothing if empty.
-  const ySource = windowPoints.length > 0 ? windowPoints : points;
-  const yDomain = getYDomain(ySource);
+  const yDomain = getYDomain(points);
   const yScale = createYScale(yDomain, [innerHeight, 0]);
 
   return {
@@ -55,7 +47,6 @@ export function buildPanelViewport(args: {
     xScale: shared.xScale,
     yDomain,
     yScale,
-    visible: windowPoints,
     size: {
       width,
       height,

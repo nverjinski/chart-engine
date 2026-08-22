@@ -82,31 +82,29 @@ export function MarketChart({ points }: MarketChartProps) {
 
   const sharedViewport = useMemo(() => {
     return buildSharedViewport({
-      points,
+      points: visibleWindow.slice,
       innerWidth: pricePlotSize.innerWidth,
       xDomain,
     });
-  }, [points, pricePlotSize.innerWidth, xDomain]);
+  }, [visibleWindow, pricePlotSize.innerWidth, xDomain]);
 
   const priceViewport = useMemo(() => {
     return buildPanelViewport({
       shared: sharedViewport,
-      points,
-      visible: visibleWindow,
+      points: visibleWindow.slice,
       size: pricePlotSize,
       getYDomain: getPriceDomain,
     });
-  }, [sharedViewport, visibleWindow, points, pricePlotSize]);
+  }, [sharedViewport, visibleWindow, pricePlotSize]);
 
   const volumeViewport = useMemo(() => {
     return buildPanelViewport({
       shared: sharedViewport,
-      points,
-      visible: visibleWindow,
+      points: visibleWindow.slice,
       size: volumePlotSize,
       getYDomain: getVolumeDomain,
     });
-  }, [sharedViewport, visibleWindow, points, volumePlotSize]);
+  }, [sharedViewport, visibleWindow, volumePlotSize]);
 
   useEffect(() => {
     return () => {
@@ -169,7 +167,7 @@ export function MarketChart({ points }: MarketChartProps) {
 
             <g clipPath="url(#plot-clip)">
               <PriceSeries
-                points={priceViewport.visible}
+                points={visibleWindow.slice}
                 xScale={priceViewport.xScale}
                 yScale={priceViewport.yScale}
               />
@@ -220,7 +218,7 @@ export function MarketChart({ points }: MarketChartProps) {
             transform={`translate(${volumeViewport.size.margins.left}, ${volumeViewport.size.margins.top})`}
           >
             <VolumeSeries
-              points={volumeViewport.visible}
+              points={visibleWindow.slice}
               xScale={volumeViewport.xScale}
               yScale={volumeViewport.yScale}
             />

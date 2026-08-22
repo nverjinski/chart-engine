@@ -1,5 +1,4 @@
 import type { ScaleLinear, ScaleTime } from "d3";
-import type { MarketPoint } from "@/data";
 
 export type TimeDomain = [Date, Date];
 export type NumericDomain = [number, number];
@@ -29,6 +28,5 @@ export type SharedViewport = {
 export type PanelViewport = SharedViewport & {
   yDomain: NumericDomain;
   yScale: ScaleLinear<number, number>;
-  visible: MarketPoint[];
   size: PlotSize;
 };
