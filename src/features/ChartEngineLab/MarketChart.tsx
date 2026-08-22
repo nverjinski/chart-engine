@@ -21,8 +21,8 @@ import {
 } from "@/features/ChartEngineLab";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
-import { useContainerSize } from "./useContainerSize";
-import { useChartZoom } from "./useChartZoom";
+import { useContainerSize } from "../../chart/useContainerSize";
+import { useChartZoom } from "../../chart/useChartZoom";
 
 type MarketChartProps = {
   points: MarketPoint[];
