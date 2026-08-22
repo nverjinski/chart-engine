@@ -17,13 +17,10 @@ import {
   VOLUME_MARGINS,
   VOLUME_HEIGHT,
   PricePanel,
+  VolumePanel,
 } from "@/features/ChartEngineLab";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
-import { ChartSurface } from "./ChartSurface";
-import { Crosshair } from "./Crosshair";
-import { XAxis } from "./XAxis";
-import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
 import { useChartZoom } from "./useChartZoom";
 
@@ -149,43 +146,11 @@ export function MarketChart({ points }: MarketChartProps) {
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
       />
-      <div className="chart-pane chart-pane--volume">
-        <ChartSurface
-          width={volumeViewport.size.width}
-          height={volumeViewport.size.height}
-        >
-          <defs>
-            <clipPath id="volume-clip">
-              <rect
-                width={volumeViewport.size.innerWidth}
-                height={volumeViewport.size.innerHeight}
-              />
-            </clipPath>
-          </defs>
-          <g
-            transform={`translate(${volumeViewport.size.margins.left}, ${volumeViewport.size.margins.top})`}
-          >
-            <VolumeSeries
-              points={visibleWindow.slice}
-              xScale={volumeViewport.xScale}
-              yScale={volumeViewport.yScale}
-            />
-            <XAxis
-              xScale={volumeViewport.xScale}
-              innerHeight={volumeViewport.size.innerHeight}
-            />
-            {hoverPoint && (
-              <Crosshair
-                point={hoverPoint}
-                xScale={volumeViewport.xScale}
-                yScale={volumeViewport.yScale}
-                innerHeight={volumeViewport.size.innerHeight}
-                verticalOnly={true}
-              />
-            )}
-          </g>
-        </ChartSurface>
-      </div>
+      <VolumePanel
+        viewport={volumeViewport}
+        points={visibleWindow.slice}
+        hoverPoint={hoverPoint}
+      />
     </div>
   );
 }
