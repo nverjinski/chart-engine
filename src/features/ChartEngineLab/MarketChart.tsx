@@ -18,11 +18,10 @@ import {
   VOLUME_HEIGHT,
   PricePanel,
   VolumePanel,
-} from "@/features/ChartEngineLab";
+} from "./panels";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
-import { useContainerSize } from "../../chart/useContainerSize";
-import { useChartZoom } from "../../chart/useChartZoom";
+import { useContainerSize, useChartZoom } from "@/chart-react";
 
 type MarketChartProps = {
   points: MarketPoint[];

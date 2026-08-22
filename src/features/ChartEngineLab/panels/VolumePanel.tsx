@@ -1,6 +1,7 @@
 import type { MarketPoint } from "@/data";
 import type { PanelViewport } from "@/chart-core";
-import { ChartSurface, XAxis, Crosshair, VolumeSeries } from "@/chart";
+import { ChartSurface, XAxis, Crosshair } from "@/chart-react";
+import { VolumeSeries } from "@/renderers/svg";
 
 type VolumePanelProps = {
   viewport: PanelViewport;

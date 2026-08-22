@@ -5,10 +5,10 @@ import {
   ChartSurface,
   XAxis,
   YAxis,
-  PriceSeries,
   Crosshair,
   Tooltip,
-} from "@/chart";
+} from "@/chart-react";
+import { PriceSeries } from "@/renderers/svg";
 
 type PricePanelProps = {
   viewport: PanelViewport;

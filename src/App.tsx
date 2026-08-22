@@ -2,8 +2,7 @@ import { useMemo } from "react";
 
 import { generateMarketData } from "@/data";
 
-import { MarketChart } from "@/features/ChartEngineLab/MarketChart";
-import { useMarketReplay } from "@/features/ChartEngineLab/hooks/useMarketReplay";
+import { MarketChart, useMarketReplay } from "@/features/ChartEngineLab";
 import "./styles/chart.css";
 
 function App() {
