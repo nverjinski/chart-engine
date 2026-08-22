@@ -21,12 +21,7 @@ import {
 } from "./panels";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
-import {
-  useContainerSize,
-  useChartZoom,
-  ChartProvider,
-  useChartContext,
-} from "@/chart-react";
+import { useContainerSize, useChartZoom, ChartProvider } from "@/chart-react";
 
 type MarketChartProps = {
   points: MarketPoint[];
@@ -36,7 +31,7 @@ type MarketChartProps = {
  * Top-level chart composition.
  */
 export function MarketChart({ points }: MarketChartProps) {
-  const [hoverPoint, setHoverPoint] = useState<MarketPoint | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<MarketPoint | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
@@ -108,11 +103,11 @@ export function MarketChart({ points }: MarketChartProps) {
   const chartContextValue = useMemo(() => {
     return {
       visiblePoints: visibleWindow.slice,
-      selectedPoint: hoverPoint,
+      selectedPoint: selectedPoint,
       priceViewport,
       volumeViewport,
     };
-  }, [visibleWindow, hoverPoint, priceViewport, volumeViewport]);
+  }, [visibleWindow, selectedPoint, priceViewport, volumeViewport]);
 
   useEffect(() => {
     return () => {
@@ -134,7 +129,7 @@ export function MarketChart({ points }: MarketChartProps) {
       if (pointerX === null) return;
 
       const time = sharedViewport.xScale.invert(pointerX);
-      setHoverPoint(findNearestByTime(points, time));
+      setSelectedPoint(findNearestByTime(points, time));
     });
   }
 
@@ -146,7 +141,7 @@ export function MarketChart({ points }: MarketChartProps) {
       frameRef.current = null;
     }
 
-    setHoverPoint(null);
+    setSelectedPoint(null);
   }
 
   return (
