@@ -1,3 +1,3 @@
 export * from "./defaults";
-export * from "./PricePanel";
-export * from "./VolumePanel";
+export { PricePanel } from "./PricePanel";
+export { VolumePanel } from "./VolumePanel";
