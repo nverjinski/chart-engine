@@ -77,11 +77,11 @@ export function MarketChart({ points }: MarketChartProps) {
 
   const sharedViewport = useMemo(() => {
     return buildSharedViewport({
-      points: visibleWindow.slice,
+      points,
       innerWidth: pricePlotSize.innerWidth,
       xDomain,
     });
-  }, [visibleWindow, pricePlotSize.innerWidth, xDomain]);
+  }, [points, pricePlotSize.innerWidth, xDomain]);
 
   const priceViewport = useMemo(() => {
     return buildPanelViewport({
