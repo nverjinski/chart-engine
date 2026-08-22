@@ -21,7 +21,12 @@ import {
 } from "./panels";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
-import { useContainerSize, useChartZoom } from "@/chart-react";
+import {
+  useContainerSize,
+  useChartZoom,
+  ChartProvider,
+  useChartContext,
+} from "@/chart-react";
 
 type MarketChartProps = {
   points: MarketPoint[];
@@ -100,6 +105,15 @@ export function MarketChart({ points }: MarketChartProps) {
     });
   }, [sharedViewport, visibleWindow, volumePlotSize]);
 
+  const chartContextValue = useMemo(() => {
+    return {
+      visiblePoints: visibleWindow.slice,
+      selectedPoint: hoverPoint,
+      priceViewport,
+      volumeViewport,
+    };
+  }, [visibleWindow, hoverPoint, priceViewport, volumeViewport]);
+
   useEffect(() => {
     return () => {
       if (frameRef.current !== null) {
@@ -137,19 +151,21 @@ export function MarketChart({ points }: MarketChartProps) {
 
   return (
     <div className="market-chart" ref={containerRef}>
-      <PricePanel
-        viewport={priceViewport}
-        points={visibleWindow.slice}
-        hoverPoint={hoverPoint}
-        zoomRef={zoomRef}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
-      />
-      <VolumePanel
-        viewport={volumeViewport}
-        points={visibleWindow.slice}
-        hoverPoint={hoverPoint}
-      />
+      <ChartProvider value={chartContextValue}>
+        <PricePanel
+          viewport={priceViewport}
+          points={visibleWindow.slice}
+          hoverPoint={hoverPoint}
+          zoomRef={zoomRef}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+        />
+        <VolumePanel
+          viewport={volumeViewport}
+          points={visibleWindow.slice}
+          hoverPoint={hoverPoint}
+        />
+      </ChartProvider>
     </div>
   );
 }
