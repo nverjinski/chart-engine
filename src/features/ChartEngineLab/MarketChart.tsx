@@ -160,11 +160,7 @@ export function MarketChart({ points }: MarketChartProps) {
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
         />
-        <VolumePanel
-          viewport={volumeViewport}
-          points={visibleWindow.slice}
-          hoverPoint={hoverPoint}
-        />
+        <VolumePanel />
       </ChartProvider>
     </div>
   );

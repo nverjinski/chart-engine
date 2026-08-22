@@ -1,44 +1,42 @@
-import type { MarketPoint } from "@/data";
-import type { PanelViewport } from "@/chart-core";
 import { ChartSurface, XAxis, Crosshair } from "@/chart-react";
 import { VolumeSeries } from "@/renderers/svg";
+import { useChartContext } from "@/chart-react";
 
-type VolumePanelProps = {
-  viewport: PanelViewport;
-  points: MarketPoint[];
-  hoverPoint: MarketPoint | null;
-};
-export function VolumePanel(props: VolumePanelProps) {
-  const { viewport, points, hoverPoint } = props;
+export function VolumePanel() {
+  const { volumeViewport, visiblePoints, selectedPoint } = useChartContext();
+
   return (
     <div className="chart-pane chart-pane--volume">
-      <ChartSurface width={viewport.size.width} height={viewport.size.height}>
+      <ChartSurface
+        width={volumeViewport.size.width}
+        height={volumeViewport.size.height}
+      >
         <defs>
           <clipPath id="volume-clip">
             <rect
-              width={viewport.size.innerWidth}
-              height={viewport.size.innerHeight}
+              width={volumeViewport.size.innerWidth}
+              height={volumeViewport.size.innerHeight}
             />
           </clipPath>
         </defs>
         <g
-          transform={`translate(${viewport.size.margins.left}, ${viewport.size.margins.top})`}
+          transform={`translate(${volumeViewport.size.margins.left}, ${volumeViewport.size.margins.top})`}
         >
           <VolumeSeries
-            points={points}
-            xScale={viewport.xScale}
-            yScale={viewport.yScale}
+            points={visiblePoints}
+            xScale={volumeViewport.xScale}
+            yScale={volumeViewport.yScale}
           />
           <XAxis
-            xScale={viewport.xScale}
-            innerHeight={viewport.size.innerHeight}
+            xScale={volumeViewport.xScale}
+            innerHeight={volumeViewport.size.innerHeight}
           />
-          {hoverPoint && (
+          {selectedPoint && (
             <Crosshair
-              point={hoverPoint}
-              xScale={viewport.xScale}
-              yScale={viewport.yScale}
-              innerHeight={viewport.size.innerHeight}
+              point={selectedPoint}
+              xScale={volumeViewport.xScale}
+              yScale={volumeViewport.yScale}
+              innerHeight={volumeViewport.size.innerHeight}
               verticalOnly={true}
             />
           )}
