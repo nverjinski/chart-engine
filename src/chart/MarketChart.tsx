@@ -16,15 +16,13 @@ import {
   PRICE_HEIGHT,
   VOLUME_MARGINS,
   VOLUME_HEIGHT,
+  PricePanel,
 } from "@/features/ChartEngineLab";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
 import { ChartSurface } from "./ChartSurface";
 import { Crosshair } from "./Crosshair";
-import { Tooltip } from "./Tooltip";
 import { XAxis } from "./XAxis";
-import { YAxis } from "./YAxis";
-import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
 import { useChartZoom } from "./useChartZoom";
@@ -143,64 +141,14 @@ export function MarketChart({ points }: MarketChartProps) {
 
   return (
     <div className="market-chart" ref={containerRef}>
-      <div className="chart-pane chart-pane--price">
-        <ChartSurface
-          width={priceViewport.size.width}
-          height={priceViewport.size.height}
-        >
-          <defs>
-            <clipPath id="plot-clip">
-              <rect
-                width={priceViewport.size.innerWidth}
-                height={priceViewport.size.innerHeight}
-              />
-            </clipPath>
-          </defs>
-          <g
-            transform={`translate(${priceViewport.size.margins.left}, ${priceViewport.size.margins.top})`}
-          >
-            <XAxis
-              xScale={priceViewport.xScale}
-              innerHeight={priceViewport.size.innerHeight}
-            />
-            <YAxis yScale={priceViewport.yScale} />
-
-            <g clipPath="url(#plot-clip)">
-              <PriceSeries
-                points={visibleWindow.slice}
-                xScale={priceViewport.xScale}
-                yScale={priceViewport.yScale}
-              />
-            </g>
-
-            <g ref={zoomRef}>
-              <rect
-                width={priceViewport.size.innerWidth}
-                height={priceViewport.size.innerHeight}
-                fill="transparent"
-                onPointerMove={handlePointerMove}
-                onPointerLeave={handlePointerLeave}
-              />
-            </g>
-            {hoverPoint && (
-              <>
-                <Crosshair
-                  point={hoverPoint}
-                  xScale={priceViewport.xScale}
-                  yScale={priceViewport.yScale}
-                  innerHeight={priceViewport.size.innerHeight}
-                />
-                <Tooltip
-                  point={hoverPoint}
-                  xScale={priceViewport.xScale}
-                  yScale={priceViewport.yScale}
-                  innerWidth={priceViewport.size.innerWidth}
-                />
-              </>
-            )}
-          </g>
-        </ChartSurface>
-      </div>
+      <PricePanel
+        viewport={priceViewport}
+        points={visibleWindow.slice}
+        hoverPoint={hoverPoint}
+        zoomRef={zoomRef}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+      />
       <div className="chart-pane chart-pane--volume">
         <ChartSurface
           width={volumeViewport.size.width}
