@@ -1,84 +1,71 @@
 import type { Ref } from "react";
-import type { MarketPoint } from "@/data";
-import type { PanelViewport } from "@/chart-core";
-import {
-  ChartSurface,
-  XAxis,
-  YAxis,
-  Crosshair,
-  Tooltip,
-} from "@/chart-react";
+import { ChartSurface, XAxis, YAxis, Crosshair, Tooltip } from "@/chart-react";
 import { PriceSeries } from "@/renderers/svg";
+import { useChartContext } from "@/chart-react";
 
 type PricePanelProps = {
-  viewport: PanelViewport;
-  points: MarketPoint[];
-  hoverPoint: MarketPoint | null;
   zoomRef: Ref<SVGGElement | null>;
   onPointerMove: (event: React.PointerEvent<SVGRectElement>) => void;
   onPointerLeave: () => void;
 };
 
 export function PricePanel(props: PricePanelProps) {
-  const {
-    viewport,
-    points,
-    hoverPoint,
-    zoomRef,
-    onPointerMove,
-    onPointerLeave,
-  } = props;
+  const { zoomRef, onPointerMove, onPointerLeave } = props;
+  const { visiblePoints, priceViewport, selectedPoint } = useChartContext();
 
   return (
     <div className="chart-pane chart-pane--price">
-      <ChartSurface width={viewport.size.width} height={viewport.size.height}>
+      <ChartSurface
+        width={priceViewport.size.width}
+        height={priceViewport.size.height}
+      >
         <defs>
           <clipPath id="plot-clip">
             <rect
-              width={viewport.size.innerWidth}
-              height={viewport.size.innerHeight}
+              width={priceViewport.size.innerWidth}
+              height={priceViewport.size.innerHeight}
             />
           </clipPath>
         </defs>
         <g
-          transform={`translate(${viewport.size.margins.left}, ${viewport.size.margins.top})`}
+          transform={`translate(${priceViewport.size.margins.left}, ${priceViewport.size.margins.top})`}
         >
           <XAxis
-            xScale={viewport.xScale}
-            innerHeight={viewport.size.innerHeight}
+            xScale={priceViewport.xScale}
+            innerHeight={priceViewport.size.innerHeight}
           />
-          <YAxis yScale={viewport.yScale} />
+          <YAxis yScale={priceViewport.yScale} />
 
           <g clipPath="url(#plot-clip)">
             <PriceSeries
-              points={points}
-              xScale={viewport.xScale}
-              yScale={viewport.yScale}
+              points={visiblePoints}
+              xScale={priceViewport.xScale}
+              yScale={priceViewport.yScale}
             />
           </g>
 
           <g ref={zoomRef}>
             <rect
-              width={viewport.size.innerWidth}
-              height={viewport.size.innerHeight}
+              width={priceViewport.size.innerWidth}
+              height={priceViewport.size.innerHeight}
               fill="transparent"
               onPointerMove={onPointerMove}
               onPointerLeave={onPointerLeave}
             />
           </g>
-          {hoverPoint && (
+          {selectedPoint && (
             <>
               <Crosshair
-                point={hoverPoint}
-                xScale={viewport.xScale}
-                yScale={viewport.yScale}
-                innerHeight={viewport.size.innerHeight}
+                point={selectedPoint}
+                xScale={priceViewport.xScale}
+                yScale={priceViewport.yScale}
+                innerHeight={priceViewport.size.innerHeight}
               />
               <Tooltip
-                point={hoverPoint}
-                xScale={viewport.xScale}
-                yScale={viewport.yScale}
-                innerWidth={viewport.size.innerWidth}
+                point={selectedPoint}
+                xScale={priceViewport.xScale}
+                yScale={priceViewport.yScale}
+                innerWidth={priceViewport.size.innerWidth}
               />
             </>
           )}

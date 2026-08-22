@@ -153,9 +153,6 @@ export function MarketChart({ points }: MarketChartProps) {
     <div className="market-chart" ref={containerRef}>
       <ChartProvider value={chartContextValue}>
         <PricePanel
-          viewport={priceViewport}
-          points={visibleWindow.slice}
-          hoverPoint={hoverPoint}
           zoomRef={zoomRef}
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
