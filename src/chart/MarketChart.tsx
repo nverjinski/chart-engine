@@ -11,7 +11,12 @@ import {
   getXDomain,
   getVisibleWindow,
 } from "@/chart-core";
-import { PRICE_MARGINS, VOLUME_MARGINS } from "@/features/ChartEngineLab";
+import {
+  PRICE_MARGINS,
+  PRICE_HEIGHT,
+  VOLUME_MARGINS,
+  VOLUME_HEIGHT,
+} from "@/features/ChartEngineLab";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
 import { ChartSurface } from "./ChartSurface";
@@ -23,9 +28,6 @@ import { PriceSeries } from "./PriceSeries";
 import { VolumeSeries } from "./VolumeSeries";
 import { useContainerSize } from "./useContainerSize";
 import { useChartZoom } from "./useChartZoom";
-
-const PRICE_HEIGHT = 480;
-const VOLUME_HEIGHT = 120;
 
 type MarketChartProps = {
   points: MarketPoint[];

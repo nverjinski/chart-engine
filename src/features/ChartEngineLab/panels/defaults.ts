@@ -12,3 +12,6 @@ export const VOLUME_MARGINS: ChartMargins = {
   bottom: 24,
   left: 56,
 };
+
+export const PRICE_HEIGHT = 480;
+export const VOLUME_HEIGHT = 120;
