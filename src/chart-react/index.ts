@@ -5,4 +5,8 @@ export { Crosshair } from "./overlays/Crosshair";
 export { Tooltip } from "./overlays/Tooltip";
 export { useContainerSize } from "./hooks/useContainerSize";
 export { useChartZoom } from "./overlays/interaction/useChartZoom";
-export { ChartProvider, useChartContext } from "./chart/ChartContext";
+export {
+  ChartProvider,
+  useChartContext,
+  type ChartContextValue,
+} from "./chart/ChartContext";

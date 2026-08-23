@@ -10,6 +10,8 @@ import {
   getVolumeDomain,
   getXDomain,
   getVisibleWindow,
+  type TimeDomain,
+  type NumericDomain,
 } from "@/chart-core";
 import {
   PRICE_MARGINS,
@@ -21,22 +23,43 @@ import {
 } from "./panels";
 import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 
-import { useContainerSize, useChartZoom, ChartProvider } from "@/chart-react";
+import {
+  useContainerSize,
+  useChartZoom,
+  ChartProvider,
+  type ChartContextValue,
+} from "@/chart-react";
 
 type MarketChartProps = {
   points: MarketPoint[];
 };
+
+const PLACEHOLDER_X_DOMAIN: TimeDomain = [new Date(0), new Date(1)];
 
 /**
  * Top-level chart composition.
  */
 export function MarketChart({ points }: MarketChartProps) {
   const [selectedPoint, setSelectedPoint] = useState<MarketPoint | null>(null);
+  const [xDomain, setXDomain] = useState<TimeDomain | null>(null);
+  const [priceYDomain, setPriceYDomain] = useState<NumericDomain | null>(null);
+  const [volumeYDomain, setVolumeYDomain] = useState<NumericDomain | null>(
+    null,
+  );
 
+  const didInitCamera = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
   const pointerXRef = useRef<number | null>(null);
   const { width } = useContainerSize(containerRef);
+
+  useEffect(() => {
+    if (didInitCamera.current || points.length === 0) return;
+    setXDomain(getXDomain(points));
+    setPriceYDomain(getPriceDomain(points));
+    setVolumeYDomain(getVolumeDomain(points));
+    didInitCamera.current = true;
+  }, [points]);
 
   const pricePlotSize = useMemo(() => {
     const margins = PRICE_MARGINS;
@@ -60,54 +83,55 @@ export function MarketChart({ points }: MarketChartProps) {
     };
   }, [width]);
 
+  // Zoom transform is relative to this base. Keep it frozen to owned xDomain
+  // (placeholder only until camera init; PricePanel is not mounted yet).
   const baseXScale = useMemo(() => {
-    return createXScale(getXDomain(points), [0, pricePlotSize.innerWidth]);
-  }, [points, pricePlotSize.innerWidth]);
+    return createXScale(xDomain ?? PLACEHOLDER_X_DOMAIN, [
+      0,
+      Math.max(pricePlotSize.innerWidth, 1),
+    ]);
+  }, [xDomain, pricePlotSize.innerWidth]);
 
-  const { zoomRef, xDomain } = useChartZoom({
-    baseXScale: baseXScale,
+  const { zoomRef } = useChartZoom({
+    baseXScale,
     innerWidth: pricePlotSize.innerWidth,
     innerHeight: pricePlotSize.innerHeight,
+    onXDomainChange: setXDomain,
   });
 
-  const visibleWindow = useMemo(() => {
-    return getVisibleWindow(points, xDomain ?? getXDomain(points));
-  }, [points, xDomain]);
+  const camera = useMemo(() => {
+    if (!xDomain || !priceYDomain || !volumeYDomain) return null;
 
-  const sharedViewport = useMemo(() => {
-    return buildSharedViewport({
-      points,
-      innerWidth: pricePlotSize.innerWidth,
+    const sharedViewport = buildSharedViewport({
       xDomain,
+      innerWidth: pricePlotSize.innerWidth,
     });
-  }, [points, pricePlotSize.innerWidth, xDomain]);
 
-  const priceViewport = useMemo(() => {
-    return buildPanelViewport({
-      shared: sharedViewport,
-      points: visibleWindow.slice,
-      size: pricePlotSize,
-      getYDomain: getPriceDomain,
-    });
-  }, [sharedViewport, visibleWindow, pricePlotSize]);
-
-  const volumeViewport = useMemo(() => {
-    return buildPanelViewport({
-      shared: sharedViewport,
-      points: visibleWindow.slice,
-      size: volumePlotSize,
-      getYDomain: getVolumeDomain,
-    });
-  }, [sharedViewport, visibleWindow, volumePlotSize]);
-
-  const chartContextValue = useMemo(() => {
     return {
-      visiblePoints: visibleWindow.slice,
-      selectedPoint: selectedPoint,
-      priceViewport,
-      volumeViewport,
+      sharedViewport,
+      priceViewport: buildPanelViewport({
+        shared: sharedViewport,
+        size: pricePlotSize,
+        yDomain: priceYDomain,
+      }),
+      volumeViewport: buildPanelViewport({
+        shared: sharedViewport,
+        size: volumePlotSize,
+        yDomain: volumeYDomain,
+      }),
+      visiblePoints: getVisibleWindow(points, xDomain).slice,
     };
-  }, [visibleWindow, selectedPoint, priceViewport, volumeViewport]);
+  }, [xDomain, priceYDomain, volumeYDomain, pricePlotSize, volumePlotSize, points]);
+
+  const chartContextValue = useMemo((): ChartContextValue | null => {
+    if (!camera) return null;
+    return {
+      visiblePoints: camera.visiblePoints,
+      selectedPoint,
+      priceViewport: camera.priceViewport,
+      volumeViewport: camera.volumeViewport,
+    };
+  }, [camera, selectedPoint]);
 
   useEffect(() => {
     return () => {
@@ -118,6 +142,9 @@ export function MarketChart({ points }: MarketChartProps) {
   }, []);
 
   function handlePointerMove(event: React.PointerEvent<SVGRectElement>) {
+    if (!camera) return;
+
+    const xScale = camera.sharedViewport.xScale;
     pointerXRef.current = d3.pointer(event)[0];
 
     if (frameRef.current !== null) return;
@@ -125,10 +152,9 @@ export function MarketChart({ points }: MarketChartProps) {
     frameRef.current = requestAnimationFrame(() => {
       frameRef.current = null;
       const pointerX = pointerXRef.current;
-
       if (pointerX === null) return;
 
-      const time = sharedViewport.xScale.invert(pointerX);
+      const time = xScale.invert(pointerX);
       setSelectedPoint(findNearestByTime(points, time));
     });
   }
@@ -144,6 +170,10 @@ export function MarketChart({ points }: MarketChartProps) {
     setSelectedPoint(null);
   }
 
+  if (!chartContextValue) {
+    return <div className="market-chart" ref={containerRef} />;
+  }
+
   return (
     <div className="market-chart" ref={containerRef}>
       <ChartProvider value={chartContextValue}>
@@ -157,7 +187,3 @@ export function MarketChart({ points }: MarketChartProps) {
     </div>
   );
 }
-
-/*
-
-*/

@@ -1,5 +1,3 @@
-import type { MarketPoint } from "@/data";
-import { getXDomain } from "@/chart-core/domains";
 import { createXScale, createYScale } from "@/chart-core/scales";
 import type {
   TimeDomain,
@@ -10,36 +8,27 @@ import type {
 } from "./viewportTypes";
 
 export function buildSharedViewport(args: {
-  points: MarketPoint[];
+  xDomain: TimeDomain;
   innerWidth: number;
-  xDomain: TimeDomain | null;
 }): SharedViewport {
-  const { points, innerWidth, xDomain } = args;
+  const { innerWidth, xDomain } = args;
 
-  const domain = xDomain ?? getXDomain(points);
-  const scale = createXScale(domain, [0, innerWidth]);
+  const scale = createXScale(xDomain, [0, innerWidth]);
 
   return {
-    xDomain: domain,
+    xDomain,
     xScale: scale,
   };
 }
 
 export function buildPanelViewport(args: {
   shared: SharedViewport;
-  points: MarketPoint[];
   size: PlotSize;
-  getYDomain: (visible: MarketPoint[]) => NumericDomain;
+  yDomain: NumericDomain;
 }): PanelViewport {
-  const {
-    points,
-    shared,
-    getYDomain,
-    size: { width, height, margins, innerWidth, innerHeight },
-  } = args;
+  const { shared, size, yDomain } = args;
+  const { width, height, margins, innerWidth, innerHeight } = size;
 
-  // Domains need a non-empty source; series should draw nothing if empty.
-  const yDomain = getYDomain(points);
   const yScale = createYScale(yDomain, [innerHeight, 0]);
 
   return {

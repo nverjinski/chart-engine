@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { ScaleTime } from "d3";
 import type { TimeDomain } from "@/chart-core";
 
@@ -7,6 +7,7 @@ type UseChartZoomProps = {
   baseXScale: ScaleTime<number, number>;
   innerWidth: number;
   innerHeight: number;
+  onXDomainChange: (xDomain: TimeDomain) => void;
 };
 
 function domainsEqual(a: TimeDomain | null, b: TimeDomain | null): boolean {
@@ -19,9 +20,15 @@ export function useChartZoom({
   baseXScale,
   innerWidth,
   innerHeight,
+  onXDomainChange,
 }: UseChartZoomProps) {
   const zoomRef = useRef<SVGGElement | null>(null);
-  const [xDomain, setXDomain] = useState<TimeDomain | null>(null);
+  const baseXScaleRef = useRef<ScaleTime<number, number> | null>(null);
+  const onXDomainChangeRef = useRef(onXDomainChange);
+  const lastDomainRef = useRef<TimeDomain | null>(null);
+
+  onXDomainChangeRef.current = onXDomainChange;
+  baseXScaleRef.current = baseXScale;
 
   useEffect(() => {
     const element = zoomRef.current;
@@ -35,12 +42,14 @@ export function useChartZoom({
       rafId = null;
       const next = latestDomain;
       if (!next) return;
-      setXDomain((prev) => (domainsEqual(prev, next) ? prev : next));
+      if (domainsEqual(lastDomainRef.current, next)) return;
+      lastDomainRef.current = next;
+      onXDomainChangeRef.current(next);
     };
 
     const zoom = d3
       .zoom<SVGGElement, unknown>()
-      .scaleExtent([1, 40])
+      .scaleExtent([0.1, 40])
       .translateExtent([
         [0, 0],
         [innerWidth, innerHeight],
@@ -50,7 +59,9 @@ export function useChartZoom({
         [innerWidth, innerHeight],
       ])
       .on("zoom", (event) => {
-        latestDomain = event.transform.rescaleX(baseXScale).domain() as TimeDomain;
+        latestDomain = event.transform
+          .rescaleX(baseXScaleRef.current)
+          .domain() as TimeDomain;
 
         if (rafId !== null) return;
         rafId = requestAnimationFrame(flushDomain);
@@ -59,22 +70,16 @@ export function useChartZoom({
     const selection = d3.select<SVGGElement, unknown>(element);
     selection.call(zoom);
 
-    // Reset zoom when the base scale / size changes (resize, new data).
-    // Identity transform fires a zoom event — cancel that rAF so it doesn't
-    // overwrite the explicit null reset.
-    selection.call(zoom.transform, d3.zoomIdentity);
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
-    latestDomain = null;
-    setXDomain(null);
 
     return () => {
       selection.on(".zoom", null);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [baseXScale, innerWidth, innerHeight]);
+  }, [innerWidth, innerHeight]);
 
-  return { zoomRef, xDomain };
+  return { zoomRef };
 }
