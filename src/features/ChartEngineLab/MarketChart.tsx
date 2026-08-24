@@ -8,6 +8,7 @@ import {
   getVolumeDomain,
   getXDomain,
   getVisibleWindow,
+  panDomainByScale,
   type TimeDomain,
   type NumericDomain,
 } from "@/chart-core";
@@ -95,13 +96,6 @@ export function MarketChart({ points }: MarketChartProps) {
     ]);
   }, [baseXDomain, pricePlotSize.innerWidth]);
 
-  const { zoomRef } = useChartZoom({
-    baseXScale,
-    innerWidth: pricePlotSize.innerWidth,
-    innerHeight: pricePlotSize.innerHeight,
-    onXDomainChange: setXDomain,
-  });
-
   const camera = useMemo(() => {
     if (!xDomain || !priceYDomain || !volumeYDomain) return null;
 
@@ -132,6 +126,21 @@ export function MarketChart({ points }: MarketChartProps) {
     volumePlotSize,
     points,
   ]);
+
+  function handleYPan(dy: number) {
+    setPriceYDomain((prev) => {
+      if (!prev || dy === 0 || !camera) return prev;
+      return panDomainByScale(camera.priceViewport.yScale, dy);
+    });
+  }
+
+  const { zoomRef } = useChartZoom({
+    baseXScale,
+    innerWidth: pricePlotSize.innerWidth,
+    innerHeight: pricePlotSize.innerHeight,
+    onXDomainChange: setXDomain,
+    onYPan: handleYPan,
+  });
 
   const chartContextValue = useMemo((): ChartContextValue | null => {
     if (!camera) return null;

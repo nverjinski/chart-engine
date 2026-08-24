@@ -8,6 +8,8 @@ type UseChartZoomProps = {
   innerWidth: number;
   innerHeight: number;
   onXDomainChange: (xDomain: TimeDomain) => void;
+  /** Pixel dy from d3 zoom pan (not wheel). Positive = pointer moved down. */
+  onYPan: (dy: number) => void;
 };
 
 function domainsEqual(a: TimeDomain | null, b: TimeDomain | null): boolean {
@@ -21,14 +23,17 @@ export function useChartZoom({
   innerWidth,
   innerHeight,
   onXDomainChange,
+  onYPan,
 }: UseChartZoomProps) {
   const zoomRef = useRef<SVGGElement | null>(null);
-  const baseXScaleRef = useRef<ScaleTime<number, number> | null>(null);
+  const baseXScaleRef = useRef(baseXScale);
   const onXDomainChangeRef = useRef(onXDomainChange);
-  const lastDomainRef = useRef<TimeDomain | null>(null);
+  const onYPanRef = useRef(onYPan);
+  const lastXDomainRef = useRef<TimeDomain | null>(null);
 
-  onXDomainChangeRef.current = onXDomainChange;
   baseXScaleRef.current = baseXScale;
+  onXDomainChangeRef.current = onXDomainChange;
+  onYPanRef.current = onYPan;
 
   useEffect(() => {
     const element = zoomRef.current;
@@ -36,15 +41,29 @@ export function useChartZoom({
     if (!element || innerWidth <= 0 || innerHeight <= 0) return;
 
     let rafId: number | null = null;
-    let latestDomain: TimeDomain | null = null;
+    let latestXDomain: TimeDomain | null = null;
+    let pendingYPan = 0;
+    let lastTransformY = 0;
 
-    const flushDomain = () => {
+    const flush = () => {
       rafId = null;
-      const next = latestDomain;
-      if (!next) return;
-      if (domainsEqual(lastDomainRef.current, next)) return;
-      lastDomainRef.current = next;
-      onXDomainChangeRef.current(next);
+
+      const nextX = latestXDomain;
+      if (nextX && !domainsEqual(lastXDomainRef.current, nextX)) {
+        lastXDomainRef.current = nextX;
+        onXDomainChangeRef.current(nextX);
+      }
+
+      if (pendingYPan !== 0) {
+        const dy = pendingYPan;
+        pendingYPan = 0;
+        onYPanRef.current(dy);
+      }
+    };
+
+    const scheduleFlush = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(flush);
     };
 
     const zoom = d3
@@ -54,22 +73,32 @@ export function useChartZoom({
         [0, 0],
         [innerWidth, innerHeight],
       ])
+      .on("start", (event) => {
+        lastTransformY = event.transform.y;
+      })
       .on("zoom", (event) => {
-        latestDomain = event.transform
+        const t = event.transform;
+        const isWheel = event.sourceEvent?.type === "wheel";
+
+        latestXDomain = t
           .rescaleX(baseXScaleRef.current)
           .domain() as TimeDomain;
 
-        if (rafId !== null) return;
-        rafId = requestAnimationFrame(flushDomain);
+        // Wheel also changes transform.y (zoom about cursor). Absorb it so we
+        // don't pan Y, and so the next drag's dy isn't polluted.
+        if (isWheel) {
+          lastTransformY = t.y;
+        } else {
+          const dy = t.y - lastTransformY;
+          lastTransformY = t.y;
+          if (dy !== 0) pendingYPan += dy;
+        }
+
+        scheduleFlush();
       });
 
     const selection = d3.select<SVGGElement, unknown>(element);
     selection.call(zoom);
-
-    if (rafId !== null) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
 
     return () => {
       selection.on(".zoom", null);
