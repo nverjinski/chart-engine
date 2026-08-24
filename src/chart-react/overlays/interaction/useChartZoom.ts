@@ -50,10 +50,6 @@ export function useChartZoom({
     const zoom = d3
       .zoom<SVGGElement, unknown>()
       .scaleExtent([0.1, 40])
-      .translateExtent([
-        [0, 0],
-        [innerWidth, innerHeight],
-      ])
       .extent([
         [0, 0],
         [innerWidth, innerHeight],

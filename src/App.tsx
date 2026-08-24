@@ -17,7 +17,7 @@ function App() {
     togglePause,
     cycleSpeed,
     reset,
-  } = useMarketReplay({ history, initialVisible: 100 });
+  } = useMarketReplay({ history, initialVisible: 1000 });
 
   const first = points[0];
   const last = points[points.length - 1];
