@@ -1,10 +1,8 @@
-import * as d3 from "d3";
 import { useState, useEffect, useMemo, useRef } from "react";
 
 import type { MarketPoint } from "@/data";
 import {
   createXScale,
-  findNearestByTime,
   getInnerSize,
   getPriceDomain,
   getVolumeDomain,
@@ -26,7 +24,6 @@ import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 import {
   useContainerSize,
   useChartZoom,
-  useScaleAxis,
   ChartProvider,
   type ChartContextValue,
 } from "@/chart-react";
@@ -51,8 +48,6 @@ export function MarketChart({ points }: MarketChartProps) {
 
   const didInitCamera = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<number | null>(null);
-  const pointerXRef = useRef<number | null>(null);
   const { width } = useContainerSize(containerRef);
 
   useEffect(() => {
@@ -148,43 +143,6 @@ export function MarketChart({ points }: MarketChartProps) {
     };
   }, [camera, selectedPoint]);
 
-  useEffect(() => {
-    return () => {
-      if (frameRef.current !== null) {
-        cancelAnimationFrame(frameRef.current);
-      }
-    };
-  }, []);
-
-  function handlePointerMove(event: React.PointerEvent<SVGRectElement>) {
-    if (!camera) return;
-
-    const xScale = camera.sharedViewport.xScale;
-    pointerXRef.current = d3.pointer(event)[0];
-
-    if (frameRef.current !== null) return;
-
-    frameRef.current = requestAnimationFrame(() => {
-      frameRef.current = null;
-      const pointerX = pointerXRef.current;
-      if (pointerX === null) return;
-
-      const time = xScale.invert(pointerX);
-      setSelectedPoint(findNearestByTime(points, time));
-    });
-  }
-
-  function handlePointerLeave() {
-    pointerXRef.current = null;
-
-    if (frameRef.current !== null) {
-      cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    }
-
-    setSelectedPoint(null);
-  }
-
   if (!chartContextValue) {
     return <div className="market-chart" ref={containerRef} />;
   }
@@ -194,9 +152,8 @@ export function MarketChart({ points }: MarketChartProps) {
       <ChartProvider value={chartContextValue}>
         <PricePanel
           zoomRef={zoomRef}
+          onSelectedPointChange={setSelectedPoint}
           onYAxisDomainChange={setPriceYDomain}
-          onPointerMove={handlePointerMove}
-          onPointerLeave={handlePointerLeave}
         />
         <VolumePanel />
       </ChartProvider>

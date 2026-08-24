@@ -1,4 +1,6 @@
+import { useRef, useEffect } from "react";
 import type { Ref } from "react";
+import * as d3 from "d3";
 import {
   ChartSurface,
   XAxis,
@@ -9,17 +11,19 @@ import {
   useScaleAxis,
 } from "@/chart-react";
 import { PriceSeries } from "@/renderers/svg";
-import { type NumericDomain } from "@/chart-core";
+import { type NumericDomain, findNearestByTime } from "@/chart-core";
+import { type MarketPoint } from "@/data";
 
 type PricePanelProps = {
   zoomRef: Ref<SVGGElement | null>;
-  onPointerMove: (event: React.PointerEvent<SVGRectElement>) => void;
-  onPointerLeave: () => void;
   onYAxisDomainChange: (domain: NumericDomain) => void;
+  onSelectedPointChange: (point: MarketPoint | null) => void;
 };
 
 export function PricePanel(props: PricePanelProps) {
-  const { zoomRef, onPointerMove, onPointerLeave, onYAxisDomainChange } = props;
+  const { zoomRef, onYAxisDomainChange, onSelectedPointChange } = props;
+  const pointerXRef = useRef<number | null>(null);
+  const frameRef = useRef<number | null>(null);
   const { visiblePoints, priceViewport, selectedPoint } = useChartContext();
 
   const { size, xScale, yScale } = priceViewport;
@@ -33,6 +37,43 @@ export function PricePanel(props: PricePanelProps) {
     orientation: "vertical",
     onDomainChange: onYAxisDomainChange,
   });
+
+  function handlePointerMove(event: React.PointerEvent<SVGRectElement>) {
+    if (!priceViewport) return;
+
+    const xScale = priceViewport.xScale;
+    pointerXRef.current = d3.pointer(event)[0];
+
+    if (frameRef.current !== null) return;
+
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      const pointerX = pointerXRef.current;
+      if (pointerX === null) return;
+
+      const time = xScale.invert(pointerX);
+      onSelectedPointChange(findNearestByTime(visiblePoints, time));
+    });
+  }
+
+  function handlePointerLeave() {
+    pointerXRef.current = null;
+
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+
+    onSelectedPointChange(null);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="chart-pane chart-pane--price">
@@ -72,8 +113,8 @@ export function PricePanel(props: PricePanelProps) {
               width={size.innerWidth}
               height={size.innerHeight}
               fill="transparent"
-              onPointerMove={onPointerMove}
-              onPointerLeave={onPointerLeave}
+              onPointerMove={handlePointerMove}
+              onPointerLeave={handlePointerLeave}
             />
           </g>
           {selectedPoint && (
