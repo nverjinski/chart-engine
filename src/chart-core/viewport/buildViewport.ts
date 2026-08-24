@@ -29,7 +29,7 @@ export function buildPanelViewport(args: {
   const { shared, size, yDomain } = args;
   const { width, height, margins, innerWidth, innerHeight } = size;
 
-  const yScale = createYScale(yDomain, [innerHeight, 0]);
+  const yScale = createYScale(yDomain, [innerHeight, 0], { nice: false });
 
   return {
     xDomain: shared.xDomain,

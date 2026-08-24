@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import type { MarketPoint } from "@/data";
 import {
   createXScale,
-  createYScale,
   findNearestByTime,
   getInnerSize,
   getPriceDomain,
@@ -27,6 +26,7 @@ import { buildSharedViewport, buildPanelViewport } from "@/chart-core/viewport";
 import {
   useContainerSize,
   useChartZoom,
+  useScaleAxis,
   ChartProvider,
   type ChartContextValue,
 } from "@/chart-react";
@@ -36,15 +36,12 @@ type MarketChartProps = {
 };
 
 const PLACEHOLDER_X_DOMAIN: TimeDomain = [new Date(0), new Date(1)];
-const PLACEHOLDER_Y_DOMAIN: NumericDomain = [0, 1];
 
 /**
  * Top-level chart composition.
  */
 export function MarketChart({ points }: MarketChartProps) {
   const [baseXDomain, setBaseXDomain] = useState<TimeDomain | null>(null);
-  const [basePriceYDomain, setBasePriceYDomain] =
-    useState<NumericDomain | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<MarketPoint | null>(null);
   const [xDomain, setXDomain] = useState<TimeDomain | null>(null);
   const [priceYDomain, setPriceYDomain] = useState<NumericDomain | null>(null);
@@ -64,9 +61,8 @@ export function MarketChart({ points }: MarketChartProps) {
     const x0 = getXDomain(points);
     const y0 = getPriceDomain(points);
 
-    // Frozen bases for d3.zoom; camera domains start equal, then diverge via gestures.
+    // Frozen X base for d3.zoom; camera domains start equal, then diverge via gestures.
     setBaseXDomain(x0);
-    setBasePriceYDomain(y0);
     setXDomain(x0);
     setPriceYDomain(y0);
     setVolumeYDomain(getVolumeDomain(points));
@@ -95,7 +91,7 @@ export function MarketChart({ points }: MarketChartProps) {
     };
   }, [width]);
 
-  // Zoom transform is relative to these bases. Domains stay frozen at init;
+  // Zoom transform is relative to this base. Domain stays frozen at init;
   // only the pixel range updates on resize.
   const baseXScale = useMemo(() => {
     return createXScale(baseXDomain ?? PLACEHOLDER_X_DOMAIN, [
@@ -103,13 +99,6 @@ export function MarketChart({ points }: MarketChartProps) {
       Math.max(pricePlotSize.innerWidth, 1),
     ]);
   }, [baseXDomain, pricePlotSize.innerWidth]);
-
-  const baseYScale = useMemo(() => {
-    return createYScale(basePriceYDomain ?? PLACEHOLDER_Y_DOMAIN, [
-      pricePlotSize.innerHeight,
-      0,
-    ]);
-  }, [basePriceYDomain, pricePlotSize.innerHeight]);
 
   const { zoomRef } = useChartZoom({
     baseXScale,
@@ -205,6 +194,7 @@ export function MarketChart({ points }: MarketChartProps) {
       <ChartProvider value={chartContextValue}>
         <PricePanel
           zoomRef={zoomRef}
+          onYAxisDomainChange={setPriceYDomain}
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
         />
